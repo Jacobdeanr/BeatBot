@@ -1,0 +1,7 @@
+
+/__pycache__
+/.venv
+discordtoken-dev.txt
+discordtoken-prod.txt
+src/.cache
+src/.env
