@@ -74,55 +74,30 @@ class QueueItem:
             print(f"Failed to get stream URL: {e}")
 
     async def _prepare_for_playback(self, youtube_service: YouTubeService, loop: asyncio.AbstractEventLoop):
-        """
-        Asynchronously prepares the source object for playback.
-
-        Parameters:
-            youtube_service (YouTubeService): An instance of the YouTubeService class.
-            loop (asyncio.AbstractEventLoop): The event loop to handle asynchronous execution.
-
-        Returns:
-            The prepared source object for playback.
-        """
         match self.source_object:
             case SpotifyTrack():
-                self.yt_object = await loop.run_in_executor(executor, self._convert_spotify_track_to_youtube, youtube_service)
+                # Build the query for a Spotify track
+                query = f"{self.source_object.artists[0].name} {self.source_object.name}"
             case str():
-                self.yt_object = await loop.run_in_executor(executor, self._convert_str_to_youtube, youtube_service)
+                # Use the string directly as a query
+                query = self.source_object
             case YouTube():
+                # Already a YouTube object, no need to search
                 self.yt_object = self.source_object
+                return
+            case _:
+                query = None
 
-         
-    def _convert_spotify_track_to_youtube(self, youtube_service: YouTubeService):
-        """
-        A function that handles Spotify tracks by binding them to a YouTube object to obtain a streaming URL.
-
-        Parameters:
-            self: The instance of the class.
-            youtube_service (YouTubeService): An instance of the YouTubeService class.
-
-        Returns:
-            The YouTube object associated with the Spotify track.
-        """
-        search_string:str = f"{self.source_object.artists[0].name} {self.source_object.name}"
-        search_results:'list[YouTube]' = youtube_service.search_and_bind(query=search_string, limit=1)
-        if search_results:
-            return search_results[0]
-        return None
-    
-    def _convert_str_to_youtube(self, youtube_service: YouTubeService):
-        """
-        A function that handles YouTube links by converting them to a YouTube object.
-
-        Parameters:
-            self: The instance of the class.
-            youtube_service (YouTubeService): An instance of the YouTubeService class.
-
-        Returns:
-            The YouTube object associated with the YouTube link.
-        """
-        return youtube_service.search_and_bind(query=self.source_object, limit=1)[0]
-
+        # If we have a query, run the search
+        if query:
+            yt_object = await loop.run_in_executor(
+                executor,
+                youtube_service.search_and_bind,
+                query,
+                1
+            )
+            if yt_object:
+                self.yt_object = yt_object[0]
 
 #async def main():    
 #    import time
