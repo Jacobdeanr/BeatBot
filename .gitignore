@@ -5,3 +5,4 @@ discordtoken-dev.txt
 discordtoken-prod.txt
 src/.cache
 src/.env
+*.pyc

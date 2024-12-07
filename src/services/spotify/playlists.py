@@ -26,7 +26,7 @@ class SpotifyPlaylistTrackSearch():
     next: str
     offset: int
     previous: str
-    total:int
+    total: int
     items: list[SpotifyPlaylistTrackItems] = field(default_factory=list)
 
 @dataclass(frozen=True)

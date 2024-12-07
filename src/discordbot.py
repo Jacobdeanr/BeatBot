@@ -1,14 +1,17 @@
 import os
+import argparse
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 import traceback
 import asyncio
 
-def read_token():
+def read_token(override_token=None):
+    if override_token:
+        return override_token
     load_dotenv()
     return os.getenv('DISCORD_BOT_TOKEN')
-    
+
 class DiscordBot(commands.Bot):
     def __init__(self, command_prefix, intents):
         super().__init__(command_prefix=command_prefix, intents=intents)
@@ -32,11 +35,21 @@ class DiscordBot(commands.Bot):
 
 # Entry point of the bot
 async def main():
+    parser = argparse.ArgumentParser(description="Discord bot")
+    parser.add_argument('-o', '--override', type=str, help="Override token for the bot")
+    args = parser.parse_args()
+
+    override_token = args.override
+    bot_token = read_token(override_token)
+
+    if not bot_token:
+        print("Error: No bot token provided. Use the environment variable or provide an override token with -o.")
+        return
+
     intents = discord.Intents.default()
     intents.message_content = True
     intents.voice_states = True
-    
-    bot_token = read_token()
+
     bot = DiscordBot(command_prefix='!', intents=intents)
     await bot.load_extension('clients.discord.discord_cogs.play_cog')
     await bot.load_extension('clients.discord.discord_cogs.playback_cog')
